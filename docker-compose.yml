@@ -1,0 +1,16 @@
+services:
+  desktop:
+    build: .
+    container_name: cu-desktop
+    ports:
+      - "5900:5900"
+      - "6080:6080"
+    environment:
+      - DISPLAY=:1
+    shm_size: "256m"
+    healthcheck:
+      test: ["CMD", "xdotool", "getactivewindow"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+      start_period: 5s

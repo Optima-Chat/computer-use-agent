@@ -1,0 +1,20 @@
+{
+  "name": "computer-use-agent",
+  "module": "run.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run run.ts",
+    "up": "docker compose up -d",
+    "down": "docker compose down"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0"
+  }
+}

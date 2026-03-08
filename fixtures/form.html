@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Form</title>
+  <style>
+    body { font-family: sans-serif; max-width: 500px; margin: 40px auto; padding: 20px; }
+    label { display: block; margin-top: 15px; font-weight: bold; }
+    input, select, textarea { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; }
+    button { margin-top: 20px; padding: 10px 30px; background: #2563eb; color: white; border: none; cursor: pointer; font-size: 16px; }
+    #result { margin-top: 20px; padding: 15px; background: #f0fdf4; border: 1px solid #86efac; display: none; }
+  </style>
+</head>
+<body>
+  <h1>Registration Form</h1>
+  <form id="form">
+    <label for="name">Full Name</label>
+    <input type="text" id="name" name="name" placeholder="Enter your name" required>
+
+    <label for="email">Email</label>
+    <input type="email" id="email" name="email" placeholder="Enter your email" required>
+
+    <label for="department">Department</label>
+    <select id="department" name="department">
+      <option value="">-- Select --</option>
+      <option value="engineering">Engineering</option>
+      <option value="marketing">Marketing</option>
+      <option value="sales">Sales</option>
+    </select>
+
+    <label for="message">Message</label>
+    <textarea id="message" name="message" rows="3" placeholder="Enter a message"></textarea>
+
+    <button type="submit">Submit</button>
+  </form>
+  <div id="result"></div>
+
+  <script>
+    document.getElementById('form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(this));
+      // Write submission to a file via a hidden mechanism
+      const resultDiv = document.getElementById('result');
+      resultDiv.style.display = 'block';
+      resultDiv.textContent = 'Submitted: ' + JSON.stringify(data);
+      // Store in localStorage for verification
+      localStorage.setItem('formData', JSON.stringify(data));
+      // Also write to document title for easy extraction
+      document.title = 'SUBMITTED:' + JSON.stringify(data);
+    });
+  </script>
+</body>
+</html>

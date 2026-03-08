@@ -1,0 +1,4 @@
+The foo project is great.
+We use foo for everything.
+foo makes life easier.
+Nothing beats foo in quality.
