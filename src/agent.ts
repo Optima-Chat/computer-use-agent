@@ -1,7 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { takeScreenshot, executeComputerAction, runBash, saveScreenshot } from "./executor.ts";
 
-const client = new Anthropic();
+const apiKey = process.env.CLAUDE_CODE_OAUTH_TOKEN || process.env.ANTHROPIC_API_KEY;
+if (!apiKey) {
+  throw new Error("Set CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY");
+}
+const client = new Anthropic({ apiKey });
 
 export interface AgentResult {
   success: boolean;
