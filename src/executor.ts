@@ -112,10 +112,8 @@ export async function waitForContainer(timeoutMs: number = 60000): Promise<void>
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {
-      const { exitCode } = await dockerExecRaw("DISPLAY=:1 xdotool getactivewindow");
-      // Even if no active window, check if X server is running
-      const { exitCode: xCheck } = await dockerExecRaw("DISPLAY=:1 xdpyinfo >/dev/null 2>&1");
-      if (xCheck === 0) return;
+      const { exitCode } = await dockerExecRaw("DISPLAY=:1 xdotool getmouselocation");
+      if (exitCode === 0) return;
     } catch {
       // ignore
     }

@@ -3,7 +3,12 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DISPLAY=:1
 
-RUN apt-get update && apt-get install -y \
+# Use Aliyun mirror for reliability
+RUN sed -i 's|http://archive.ubuntu.com|http://mirrors.aliyun.com|g' /etc/apt/sources.list && \
+    sed -i 's|http://security.ubuntu.com|http://mirrors.aliyun.com|g' /etc/apt/sources.list
+
+# Install base packages (without firefox - snap doesn't work in Docker)
+RUN apt-get update && apt-get install -y --no-install-recommends \
     xvfb \
     fluxbox \
     x11vnc \
@@ -12,18 +17,24 @@ RUN apt-get update && apt-get install -y \
     xterm \
     xdotool \
     scrot \
-    firefox \
     mousepad \
     thunar \
     python3 \
-    python3-pip \
     curl \
     wget \
     ca-certificates \
     fonts-liberation \
     fonts-noto-cjk \
     dbus-x11 \
+    software-properties-common \
+    gpg-agent \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Firefox from Mozilla PPA (real deb, not snap)
+RUN add-apt-repository -y ppa:mozillateam/ppa && \
+    echo 'Package: *\nPin: release o=LP-PPA-mozillateam\nPin-Priority: 1001' > /etc/apt/preferences.d/mozilla-firefox && \
+    apt-get update && apt-get install -y --no-install-recommends firefox && \
+    rm -rf /var/lib/apt/lists/*
 
 # Create working directories
 RUN mkdir -p /root/Desktop /root/Documents /tmp/screenshots /tmp/fixtures

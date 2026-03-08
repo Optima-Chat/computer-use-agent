@@ -9,7 +9,7 @@ services:
       - DISPLAY=:1
     shm_size: "256m"
     healthcheck:
-      test: ["CMD", "xdotool", "getactivewindow"]
+      test: ["CMD-SHELL", "DISPLAY=:1 xdotool getmouselocation"]
       interval: 3s
       timeout: 5s
       retries: 10

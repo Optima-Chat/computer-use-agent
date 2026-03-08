@@ -32,7 +32,7 @@ export async function runAgent(
   options: AgentOptions = {}
 ): Promise<AgentResult> {
   const {
-    model = "claude-sonnet-4-5-20250514",
+    model = "claude-sonnet-4-6",
     maxIterations = 30,
     screenshotDir,
     taskId,
@@ -74,7 +74,7 @@ export async function runAgent(
         system: SYSTEM_PROMPT,
         messages,
         tools,
-        betas: ["computer-use-2025-01-24"],
+        betas: ["computer-use-2025-11-24"],
       });
 
       totalInput += response.usage.input_tokens;

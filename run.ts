@@ -9,7 +9,7 @@ import { mkdir } from "fs/promises";
 const { values } = parseArgs({
   args: Bun.argv.slice(2),
   options: {
-    model: { type: "string", default: "claude-sonnet-4-5-20250514" },
+    model: { type: "string", default: "claude-sonnet-4-6" },
     tasks: { type: "string" },
     "max-iterations": { type: "string", default: "30" },
   },
