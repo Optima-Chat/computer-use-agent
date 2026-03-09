@@ -106,6 +106,14 @@ export async function readFile(path: string): Promise<string> {
   return stdout;
 }
 
+export async function copyToContainer(localPath: string, containerPath: string): Promise<void> {
+  const proc = Bun.spawn(["docker", "cp", localPath, `${CONTAINER}:${containerPath}`], {
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  await proc.exited;
+}
+
 // ─── Container Management ────────────────────────────────────────
 
 export async function waitForContainer(timeoutMs: number = 60000): Promise<void> {

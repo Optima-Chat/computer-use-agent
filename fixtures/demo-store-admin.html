@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Optima Store Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f1f5f9; color: #1e293b; }
+
+    /* Sidebar */
+    .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 180px; background: #0f172a; color: #e2e8f0; padding: 16px 0; }
+    .sidebar .logo { padding: 0 16px 20px; font-size: 16px; font-weight: 700; color: #38bdf8; border-bottom: 1px solid #1e293b; margin-bottom: 12px; }
+    .sidebar a { display: block; padding: 8px 16px; color: #94a3b8; text-decoration: none; font-size: 13px; }
+    .sidebar a:hover, .sidebar a.active { background: #1e293b; color: #f8fafc; }
+
+    /* Main */
+    .main { margin-left: 180px; padding: 20px 24px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .header h1 { font-size: 20px; }
+    .btn { padding: 7px 16px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500; }
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-outline { background: white; border: 1px solid #cbd5e1; color: #475569; }
+
+    /* Stats Cards */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+    .stat-card { background: white; border-radius: 8px; padding: 14px 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .stat-card .label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card .value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+    .stat-card .change { font-size: 11px; margin-top: 2px; }
+    .stat-card .change.up { color: #16a34a; }
+    .stat-card .change.down { color: #dc2626; }
+
+    /* Table */
+    .card { background: white; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .card-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid #f1f5f9; }
+    .card-header h2 { font-size: 15px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 10px 16px; background: #f8fafc; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+    td { padding: 10px 16px; border-top: 1px solid #f1f5f9; }
+    tr:hover { background: #f8fafc; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+    .badge-green { background: #dcfce7; color: #166534; }
+    .badge-yellow { background: #fef9c3; color: #854d0e; }
+    .badge-blue { background: #dbeafe; color: #1e40af; }
+    .badge-red { background: #fee2e2; color: #991b1b; }
+    .product-img { width: 36px; height: 36px; border-radius: 6px; object-fit: cover; background: #f1f5f9; display: inline-block; vertical-align: middle; margin-right: 8px; }
+
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; justify-content: center; align-items: center; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: white; border-radius: 10px; width: 420px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .modal-header { padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { font-size: 15px; }
+    .modal-close { background: none; border: none; font-size: 18px; cursor: pointer; color: #94a3b8; }
+    .modal-body { padding: 16px 20px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
+    .modal-footer { padding: 12px 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 8px; }
+
+    /* Toast */
+    .toast { position: fixed; top: 20px; right: 20px; background: #166534; color: white; padding: 12px 20px; border-radius: 8px; font-size: 13px; display: none; z-index: 200; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .toast.show { display: block; }
+
+    /* Filters */
+    .filters { display: flex; gap: 10px; margin-bottom: 14px; }
+    .filters input { padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; width: 220px; }
+    .filters select { padding: 7px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo">Optima Admin</div>
+    <a href="#">Dashboard</a>
+    <a href="#" class="active">Products</a>
+    <a href="#">Orders</a>
+    <a href="#">Customers</a>
+    <a href="#">Analytics</a>
+    <a href="#">Settings</a>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <h1>Product Management</h1>
+      <button class="btn btn-primary" onclick="openModal()">+ Add Product</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="label">Total Products</div>
+        <div class="value">156</div>
+        <div class="change up">+12 this month</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Active Listings</div>
+        <div class="value">142</div>
+        <div class="change up">+8 this week</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Out of Stock</div>
+        <div class="value">7</div>
+        <div class="change down">+2 items</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Avg. Price</div>
+        <div class="value">$34.50</div>
+        <div class="change up">+5.2%</div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <input type="text" id="search" placeholder="Search products...">
+      <select id="categoryFilter">
+        <option value="">All Categories</option>
+        <option value="electronics">Electronics</option>
+        <option value="clothing">Clothing</option>
+        <option value="home">Home & Garden</option>
+        <option value="sports">Sports</option>
+      </select>
+      <select id="statusFilter">
+        <option value="">All Status</option>
+        <option value="active">Active</option>
+        <option value="draft">Draft</option>
+        <option value="out_of_stock">Out of Stock</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>Products</h2>
+        <span style="font-size:12px;color:#64748b;">Showing 6 of 156 products</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>SKU</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="productTable">
+          <tr>
+            <td><span class="product-img" style="background:#e0e7ff;"></span>Wireless Earbuds Pro</td>
+            <td>WEP-001</td>
+            <td>Electronics</td>
+            <td>$79.99</td>
+            <td>234</td>
+            <td><span class="badge badge-green">Active</span></td>
+            <td><button class="btn btn-outline" onclick="editProduct(0)">Edit</button></td>
+          </tr>
+          <tr>
+            <td><span class="product-img" style="background:#fce7f3;"></span>Silk Blend Scarf</td>
+            <td>SBS-042</td>
+            <td>Clothing</td>
+            <td>$24.99</td>
+            <td>89</td>
+            <td><span class="badge badge-green">Active</span></td>
+            <td><button class="btn btn-outline" onclick="editProduct(1)">Edit</button></td>
+          </tr>
+          <tr>
+            <td><span class="product-img" style="background:#d1fae5;"></span>Bamboo Desk Organizer</td>
+            <td>BDO-107</td>
+            <td>Home & Garden</td>
+            <td>$18.50</td>
+            <td>0</td>
+            <td><span class="badge badge-red">Out of Stock</span></td>
+            <td><button class="btn btn-outline" onclick="editProduct(2)">Edit</button></td>
+          </tr>
+          <tr>
+            <td><span class="product-img" style="background:#fef3c7;"></span>Yoga Mat Premium</td>
+            <td>YMP-088</td>
+            <td>Sports</td>
+            <td>$45.00</td>
+            <td>12</td>
+            <td><span class="badge badge-yellow">Low Stock</span></td>
+            <td><button class="btn btn-outline" onclick="editProduct(3)">Edit</button></td>
+          </tr>
+          <tr>
+            <td><span class="product-img" style="background:#e0e7ff;"></span>USB-C Hub 7-in-1</td>
+            <td>UCH-023</td>
+            <td>Electronics</td>
+            <td>$39.99</td>
+            <td>567</td>
+            <td><span class="badge badge-green">Active</span></td>
+            <td><button class="btn btn-outline" onclick="editProduct(4)">Edit</button></td>
+          </tr>
+          <tr>
+            <td><span class="product-img" style="background:#fce7f3;"></span>Merino Wool Sweater</td>
+            <td>MWS-015</td>
+            <td>Clothing</td>
+            <td>$89.00</td>
+            <td>0</td>
+            <td><span class="badge badge-blue">Draft</span></td>
+            <td><button class="btn btn-outline" onclick="editProduct(5)">Edit</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Add/Edit Product Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Add New Product</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="productForm">
+          <div class="form-group">
+            <label for="prodName">Product Name</label>
+            <input type="text" id="prodName" placeholder="Enter product name" required>
+          </div>
+          <div class="form-group">
+            <label for="prodSku">SKU</label>
+            <input type="text" id="prodSku" placeholder="e.g. ABC-001">
+          </div>
+          <div class="form-group">
+            <label for="prodCategory">Category</label>
+            <select id="prodCategory">
+              <option value="">-- Select Category --</option>
+              <option value="electronics">Electronics</option>
+              <option value="clothing">Clothing</option>
+              <option value="home">Home & Garden</option>
+              <option value="sports">Sports</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="prodPrice">Price ($)</label>
+            <input type="number" id="prodPrice" step="0.01" placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label for="prodStock">Stock Quantity</label>
+            <input type="number" id="prodStock" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label for="prodStatus">Status</label>
+            <select id="prodStatus">
+              <option value="active">Active</option>
+              <option value="draft">Draft</option>
+              <option value="out_of_stock">Out of Stock</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="prodDesc">Description</label>
+            <textarea id="prodDesc" rows="3" placeholder="Product description..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveProduct()">Save Product</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const products = [
+      { name: 'Wireless Earbuds Pro', sku: 'WEP-001', category: 'electronics', price: 79.99, stock: 234, status: 'active', desc: 'High-quality wireless earbuds with noise cancellation.' },
+      { name: 'Silk Blend Scarf', sku: 'SBS-042', category: 'clothing', price: 24.99, stock: 89, status: 'active', desc: 'Luxurious silk blend scarf in multiple colors.' },
+      { name: 'Bamboo Desk Organizer', sku: 'BDO-107', category: 'home', price: 18.50, stock: 0, status: 'out_of_stock', desc: 'Eco-friendly bamboo organizer for your workspace.' },
+      { name: 'Yoga Mat Premium', sku: 'YMP-088', category: 'sports', price: 45.00, stock: 12, status: 'active', desc: 'Non-slip premium yoga mat, 6mm thick.' },
+      { name: 'USB-C Hub 7-in-1', sku: 'UCH-023', category: 'electronics', price: 39.99, stock: 567, status: 'active', desc: '7-in-1 USB-C hub with HDMI, USB-A, SD card.' },
+      { name: 'Merino Wool Sweater', sku: 'MWS-015', category: 'clothing', price: 89.00, stock: 0, status: 'draft', desc: 'Premium merino wool sweater, hand-finished.' },
+    ];
+
+    let editingIndex = -1;
+
+    function openModal() {
+      editingIndex = -1;
+      document.getElementById('modalTitle').textContent = 'Add New Product';
+      document.getElementById('productForm').reset();
+      document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function editProduct(idx) {
+      editingIndex = idx;
+      const p = products[idx];
+      document.getElementById('modalTitle').textContent = 'Edit Product';
+      document.getElementById('prodName').value = p.name;
+      document.getElementById('prodSku').value = p.sku;
+      document.getElementById('prodCategory').value = p.category;
+      document.getElementById('prodPrice').value = p.price;
+      document.getElementById('prodStock').value = p.stock;
+      document.getElementById('prodStatus').value = p.status;
+      document.getElementById('prodDesc').value = p.desc;
+      document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    function saveProduct() {
+      const data = {
+        name: document.getElementById('prodName').value,
+        sku: document.getElementById('prodSku').value,
+        category: document.getElementById('prodCategory').value,
+        price: parseFloat(document.getElementById('prodPrice').value) || 0,
+        stock: parseInt(document.getElementById('prodStock').value) || 0,
+        status: document.getElementById('prodStatus').value,
+        desc: document.getElementById('prodDesc').value,
+      };
+
+      if (!data.name) { alert('Product name is required'); return; }
+
+      if (editingIndex >= 0) {
+        products[editingIndex] = data;
+      } else {
+        products.push(data);
+      }
+
+      // Write result for verification
+      document.title = 'SAVED:' + JSON.stringify(data);
+      localStorage.setItem('lastSaved', JSON.stringify(data));
+
+      closeModal();
+      renderTable();
+      showToast(editingIndex >= 0 ? 'Product updated successfully!' : 'Product added successfully!');
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('productTable');
+      const colors = { electronics: '#e0e7ff', clothing: '#fce7f3', home: '#d1fae5', sports: '#fef3c7' };
+      const statusBadge = { active: 'badge-green', draft: 'badge-blue', out_of_stock: 'badge-red' };
+      const statusLabel = { active: 'Active', draft: 'Draft', out_of_stock: 'Out of Stock' };
+
+      tbody.innerHTML = products.map((p, i) => {
+        let badge = statusBadge[p.status] || 'badge-green';
+        if (p.status === 'active' && p.stock > 0 && p.stock <= 20) badge = 'badge-yellow';
+        const label = (p.status === 'active' && p.stock > 0 && p.stock <= 20) ? 'Low Stock' : (statusLabel[p.status] || p.status);
+        return `<tr>
+          <td><span class="product-img" style="background:${colors[p.category] || '#f1f5f9'};"></span>${p.name}</td>
+          <td>${p.sku}</td>
+          <td>${p.category ? p.category.charAt(0).toUpperCase() + p.category.slice(1) : '-'}</td>
+          <td>$${p.price.toFixed(2)}</td>
+          <td>${p.stock}</td>
+          <td><span class="badge ${badge}">${label}</span></td>
+          <td><button class="btn btn-outline" onclick="editProduct(${i})">Edit</button></td>
+        </tr>`;
+      }).join('');
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+  </script>
+</body>
+</html>
