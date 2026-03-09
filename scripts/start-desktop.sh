@@ -2,7 +2,7 @@
 set -e
 
 # Start Xvfb
-Xvfb :1 -screen 0 1024x768x24 &
+Xvfb :1 -screen 0 768x576x24 &
 sleep 1
 
 # Start Fluxbox window manager

@@ -54,8 +54,8 @@ export async function runAgent(
     {
       type: "computer_20251124",
       name: "computer",
-      display_width_px: 1024,
-      display_height_px: 768,
+      display_width_px: 768,
+      display_height_px: 576,
     },
     {
       type: "bash_20250124",
