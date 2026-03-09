@@ -81,22 +81,68 @@ Host (LLM API) ←→ Container (虚拟桌面)
 
 ---
 
+## 已有相关工作
+
+Agent 系统优化**并非空白**，需要了解已有工作才能找到差异化切入点：
+
+### Agent Serving 系统
+| 论文 | 来源 | 时间 | 内容 |
+|------|------|------|------|
+| **Autellix** | Berkeley / Google | 2025.02 | Agent Serving 引擎，程序级调度，比 vLLM 提升 4-15x 吞吐 |
+| **Software-Defined Agentic Serving** | - | 2026.01 | Agent 推理的软件定义服务架构 |
+
+### Agent 效率与成本分析
+| 论文 | 时间 | 内容 |
+|------|------|------|
+| **The Cost of Dynamic Reasoning** | 2025.06 | Agent 系统级分析：资源、延迟、能耗、数据中心功耗 |
+| **Efficient Agents** | 2025.07 | Agent 效率优化，token 成本分析 |
+| **Beyond Benchmarks: Economics of AI Inference** | 2025.10 | 推理经济学框架 |
+
+### CUA 专用模型
+| 论文 | 时间 | 内容 |
+|------|------|------|
+| **Fara-7B** | 2025.11 | 专为 Computer Use 设计的高效 7B 模型 |
+
+### VLM 推理优化
+| 论文 | 来源 | 时间 | 内容 |
+|------|------|------|------|
+| **VL-Cache** | Amazon | 2024.10 | VLM KV Cache 压缩，只保留 10% cache 达到 2.33x 加速 |
+
+### 差异化空间
+
+上述工作主要是**泛化的 Agent Serving** 或 **VLM 推理优化**。专门针对 CUA 独特 workload 特征的系统研究仍较少：
+- CUA 的**串行截图依赖**（上一步结果决定下一步，无法并行）
+- **高图文比例**（截图占 70%+ token）
+- **异构任务特征**（终端 3 轮 7K vs GUI 22 轮 124K，差异 20x）
+- **实际桌面环境的端到端优化**（不只是推理，还包括截图传输、工具执行延迟）
+
+---
+
 ## 潜在论文方向
 
-| 方向 | 目标会议 | 核心贡献 | 难度 |
+需要与 Autellix 等已有工作做差异化：
+
+| 方向 | 差异化点 | 目标会议 | 难度 |
 |------|---------|---------|------|
-| CUA Serving 系统（KV Cache 优化、增量截图） | EuroSys / OSDI | 新 workload 的 serving 优化 | 中高 |
-| CUA 资源调度（异构任务混合调度） | NSDI / SoCC | 调度算法 + 系统实现 | 中 |
-| CUA Token 成本优化（截图传输与压缩） | MLSys / ATC | 系统优化 + 实验验证 | 中 |
-| CUA Benchmark 系统（效率导向的评测框架） | ISCA / Workshop | 新 benchmark + 分析 | 低中 |
+| CUA 端到端系统分析 | 首个针对 CUA workload 的系统级 characterization（截图开销、迭代模式、瓶颈定位） | MLSys / ATC | 中 |
+| CUA 视觉 token 优化 | 增量截图、自适应分辨率、视觉 token 去重（区别于 VL-Cache 的通用压缩） | EuroSys / OSDI | 中高 |
+| CUA 异构任务调度 | 终端/GUI 混合 workload 调度（区别于 Autellix 的通用 Agent 调度） | NSDI / SoCC | 中 |
+| CUA + 边缘部署 | 本地小模型 (Fara-7B) + 云端大模型混合推理 | MLSys | 中高 |
 
 ---
 
 ## 与现有工作的关系
 
 ```
-iSING Lab 已有工作                    CUA 研究扩展
-─────────────────                    ─────────────
+已有外部工作                          iSING 可切入的方向
+──────────                          ──────────────────
+Autellix (Agent 调度)   ──对比──▶   CUA 专用调度（串行依赖 + 异构任务）
+VL-Cache (VLM 压缩)    ──对比──▶   CUA 截图 token 优化（增量 + 自适应）
+Fara-7B (CUA 小模型)   ──互补──▶   大小模型混合推理系统
+Cost of Dynamic Reasoning ──延伸──▶ CUA 专项 characterization
+
+iSING Lab 已有工作                   CUA 研究扩展
+─────────────────                   ─────────────
 MFS (LLM Serving)     ──────▶       CUA Serving（多轮图文推理优化）
 GREEN (集群调度)       ──────▶       CUA 调度（异构任务、碳效率）
 TACC (GPU 平台)       ──────▶       CUA Benchmark 平台
@@ -105,20 +151,26 @@ FuseLink (GPU 通信)   ──────▶       多 agent 并行通信优化
 
 ---
 
-## 独特优势
+## 优势与风险
 
-1. **实测数据**: 我们已有 Sonnet 4.6 和 Opus 4.6 的完整 benchmark 数据，包括 token 分布、迭代模式、延迟特征
-2. **可复现环境**: Docker + Bun 的 benchmark 框架已搭好，可以快速迭代实验
-3. **系统视角稀缺**: 当前 CUA 研究主要集中在模型能力（CV/NLP），几乎没有从 ML Systems 角度分析的工作
-4. **实验室积累**: MFS/Tabi 的 LLM Serving 经验可以直接迁移
+### 优势
+1. **实测数据**: 已有 Sonnet 4.6 和 Opus 4.6 的完整 benchmark 数据
+2. **可复现环境**: Docker + Bun 的 benchmark 框架已搭好
+3. **实验室积累**: MFS/Tabi 的 LLM Serving 经验可以直接迁移
+4. **CUA 专项分析稀缺**: 泛化 Agent 系统研究已有，但 CUA 专项的系统分析还少
+
+### 风险
+1. **Berkeley (Stoica 组) 已在前面**: Autellix 出自 vLLM 团队，他们在 Agent Serving 上有先发优势
+2. **CUA 是否足够独特**: 需要有力论证 CUA workload 与一般 Agent workload 的系统层差异
+3. **Benchmark 规模**: 我们目前只有 7 个任务，可能不足以支撑系统论文的实验部分
 
 ---
 
 ## 建议优先级
 
-1. **最推荐**: CUA Serving 优化 — 直接延续 MFS/Tabi 的研究线，有明确的系统挑战，且当前无竞争者
-2. **次推荐**: CUA Token/成本优化 — 实用价值高，实验相对容易做，可以先出一篇短文/Workshop
-3. **长线**: CUA Benchmark 系统 — 如果能成为标准 benchmark，影响力大但需要社区认可
+1. **最推荐**: CUA Workload Characterization — 先做一篇系统分析（profiling CUA 的 token 分布、延迟瓶颈、资源使用模式），为后续工作打基础
+2. **次推荐**: CUA 视觉 token 优化 — 增量截图 + 自适应分辨率，实用价值高，与 VL-Cache 差异化
+3. **谨慎**: CUA Serving 系统 — 需要与 Autellix 明确差异化，否则会被 review 挑战 novelty
 
 ---
 
