@@ -8,9 +8,9 @@
 
 | 产品 | 公司 | 定价 | 特点 |
 |------|------|------|------|
-| Operator / ChatGPT Agent | OpenAI | Plus $20/月, Pro $200/月 | CUA 模型，已整合进 ChatGPT agent mode，主要做 Web 任务。OSWorld 38.1% |
-| Copilot Studio CUA | Microsoft | 企业订阅 | 2025.04 发布，面向企业 UI 自动化，替代传统 RPA，操作 Web + 桌面应用 |
-| Computer | Perplexity | Max $200/月 | 协调 19 个模型执行复杂后台工作流 |
+| Operator / ChatGPT Agent | OpenAI | Plus $20/月, Pro $200/月 | CUA 模型，已整合进 ChatGPT agent mode，主要做 Web 任务。OSWorld: 初代 38.1%, GPT-5.4 达 75%（超人类 72.4%） |
+| Copilot Studio CUA | Microsoft | 企业订阅 | 2025 年预览（04 首次预览，09 公共预览），面向企业 UI 自动化，替代传统 RPA，操作 Web + 桌面应用 |
+| Computer | Perplexity | Max $200/月 | 2026.02.25 发布，协调 19 个模型执行复杂后台工作流，每任务按 credit 消耗 |
 | Claude Computer Use | Anthropic | API 按量计费 | 仅提供 API，需自建环境。2026.02 收购 Vercept，可能是为了产品化 |
 
 ---
@@ -20,8 +20,8 @@
 | 产品 | 定位 | 状态 |
 |------|------|------|
 | Vercept (Vy) | 云端 MacBook computer use agent | 2026.02 被 Anthropic 收购（$50M 融资），3/25 关停产品 |
-| MultiOn | AI 浏览器，跨网站多步骤任务 | 运营中 |
-| Skyvern | AI RPA，自动处理 CAPTCHA/2FA/动态内容 | 运营中 |
+| MultiOn | Web 自动化 API 平台，跨网站多步骤任务 | 运营中，开发者导向 |
+| Skyvern | 浏览器自动化（非桌面），LLM + CV 驱动，处理 CAPTCHA/动态内容 | 运营中，开源 |
 
 ---
 
@@ -54,7 +54,7 @@ UiPath、Automation Anywhere 等传统 RPA 巨头都在集成 AI agent 能力，
 
 ## 关键结论
 
-1. **赛道处于早期** — 性能尚不够稳定（OpenAI CUA 在 OSWorld 仅 38.1%），成本偏高，但各大厂都在押注
+1. **赛道快速进化** — OpenAI CUA 从初代 38.1% 到 GPT-5.4 的 75%（超人类基线 72.4%），半年内翻倍，但各大厂仍在押注
 2. **三条路线并行** — OpenAI 走 to-C（Operator），Microsoft 走企业 RPA 替代，Anthropic 走 API + 收购
 3. **Anthropic 在加速** — 收购 Vercept（云端 Mac agent），可能要从纯 API 走向产品化
 4. **传统 RPA 被颠覆** — AI agent 直接看屏幕操作，不再需要预先定义规则和选择器
