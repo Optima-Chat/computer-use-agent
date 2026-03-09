@@ -131,6 +131,83 @@ async function main() {
   );
   console.log("============================================================");
 
+  // ─── Profiling Summary ───────────────────────────────────────
+
+  console.log("\n============================================================");
+  console.log("LATENCY PROFILE (Inference vs VM Execution)");
+  console.log("============================================================");
+
+  let grandInferenceMs = 0;
+  let grandToolMs = 0;
+  let grandScreenshotMs = 0;
+  let grandActionMs = 0;
+  let grandBashMs = 0;
+  let totalScreenshots = 0;
+  let totalScreenshotBytes = 0;
+
+  for (const r of results) {
+    const profile = r.agentResult.profile;
+    if (!profile || profile.length === 0) continue;
+
+    let taskInference = 0;
+    let taskTool = 0;
+    let taskScreenshot = 0;
+    let taskAction = 0;
+    let taskBash = 0;
+    let taskScreenshotCount = 0;
+    let taskScreenshotBytes = 0;
+
+    for (const iter of profile) {
+      taskInference += iter.inferenceMs;
+      taskTool += iter.toolExecutionMs;
+      for (const t of iter.tools) {
+        if (t.tool === "computer.screenshot") {
+          taskScreenshot += t.executionMs;
+          taskScreenshotCount++;
+          if (t.screenshotBytes) taskScreenshotBytes += t.screenshotBytes;
+        } else if (t.tool === "bash") {
+          taskBash += t.executionMs;
+        } else {
+          taskAction += t.executionMs;
+        }
+      }
+    }
+
+    const taskTotal = taskInference + taskTool;
+    const infPct = taskTotal > 0 ? Math.round((taskInference / taskTotal) * 100) : 0;
+    const vmPct = taskTotal > 0 ? Math.round((taskTool / taskTotal) * 100) : 0;
+
+    console.log(`\n  Task ${r.task.id}: ${r.task.name}`);
+    console.log(`  ├─ Inference:  ${(taskInference / 1000).toFixed(1)}s (${infPct}%)`);
+    console.log(`  ├─ VM Total:   ${(taskTool / 1000).toFixed(1)}s (${vmPct}%)`);
+    console.log(`  │  ├─ Screenshots: ${(taskScreenshot / 1000).toFixed(1)}s (${taskScreenshotCount} captures, ${(taskScreenshotBytes / 1024).toFixed(0)}KB)`);
+    console.log(`  │  ├─ GUI Actions: ${(taskAction / 1000).toFixed(1)}s`);
+    console.log(`  │  └─ Bash:        ${(taskBash / 1000).toFixed(1)}s`);
+    console.log(`  └─ Total:      ${(taskTotal / 1000).toFixed(1)}s`);
+
+    grandInferenceMs += taskInference;
+    grandToolMs += taskTool;
+    grandScreenshotMs += taskScreenshot;
+    grandActionMs += taskAction;
+    grandBashMs += taskBash;
+    totalScreenshots += taskScreenshotCount;
+    totalScreenshotBytes += taskScreenshotBytes;
+  }
+
+  const grandTotal = grandInferenceMs + grandToolMs;
+  if (grandTotal > 0) {
+    console.log(`\n──────────────────────────────────────────────────────────`);
+    console.log(`  AGGREGATE`);
+    console.log(`  ├─ Inference:  ${(grandInferenceMs / 1000).toFixed(1)}s (${Math.round((grandInferenceMs / grandTotal) * 100)}%)`);
+    console.log(`  ├─ VM Total:   ${(grandToolMs / 1000).toFixed(1)}s (${Math.round((grandToolMs / grandTotal) * 100)}%)`);
+    console.log(`  │  ├─ Screenshots: ${(grandScreenshotMs / 1000).toFixed(1)}s (${totalScreenshots} captures, ${(totalScreenshotBytes / 1024).toFixed(0)}KB total)`);
+    console.log(`  │  ├─ GUI Actions: ${(grandActionMs / 1000).toFixed(1)}s`);
+    console.log(`  │  └─ Bash:        ${(grandBashMs / 1000).toFixed(1)}s`);
+    console.log(`  └─ Total:      ${(grandTotal / 1000).toFixed(1)}s`);
+    console.log(`\n  Avg screenshot: ${totalScreenshots > 0 ? (grandScreenshotMs / totalScreenshots).toFixed(0) : 0}ms capture, ${totalScreenshots > 0 ? ((totalScreenshotBytes / totalScreenshots) / 1024).toFixed(0) : 0}KB/frame`);
+  }
+  console.log("============================================================");
+
   // Save report
   const report = {
     model,
@@ -138,6 +215,15 @@ async function main() {
     score: { passed, total, percentage: Math.round((passed / total) * 100) },
     totalElapsedMs: totalElapsed,
     totalTokens,
+    profile: {
+      inferenceMs: grandInferenceMs,
+      vmExecutionMs: grandToolMs,
+      screenshotMs: grandScreenshotMs,
+      guiActionMs: grandActionMs,
+      bashMs: grandBashMs,
+      screenshotCount: totalScreenshots,
+      screenshotBytesTotal: totalScreenshotBytes,
+    },
     tasks: results.map((r) => ({
       id: r.task.id,
       name: r.task.name,
@@ -149,6 +235,7 @@ async function main() {
       inputTokens: r.agentResult.inputTokens,
       outputTokens: r.agentResult.outputTokens,
       error: r.agentResult.error,
+      profile: r.agentResult.profile,
     })),
   };
 
