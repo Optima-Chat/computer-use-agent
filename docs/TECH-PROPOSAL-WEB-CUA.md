@@ -1,14 +1,14 @@
 # 技术方案：Web CUA 自动化系统
 
 **日期**: 2026-03-11
-**目标**: 为 Optima 接入 Web CUA 能力，实现"有 API 用 MCP，没 API 用 CUA"
+**目标**: 为 Optima 接入 Web CUA 能力，实现"有 CLI 用 CLI，没 API 用 CUA"
 **优先级**: 高（替代大量手工系统集成开发）
 
 ---
 
 ## 1. 背景
 
-Optima 当前有 60+ MCP 工具覆盖有 API 的服务。但以下场景没有 API：
+Optima 当前架构为 `agentic-chat → optima-ai-shell → optima-agent → xxx-cli → commerce-backend`，拥有 7 个 CLI 工具（commerce-cli、comfy-cli、scout-cli、bi-cli、google-ads-cli 等）共 280+ 命令，覆盖有 API 的服务。但以下场景没有 API：
 
 | 场景 | 示例 | 频率 |
 |------|------|------|
@@ -471,30 +471,40 @@ async def batch_execute(tasks: list[dict]):
 
 ## 6. 与 Optima 现有系统的集成
 
-### 在 MCP 工具层新增 CUA 工具
+### 在 optima-agent 中新增 CUA Skill
 
-```python
-# 新增到 Optima 的 MCP 工具列表
-CUA_TOOLS = {
-    "cua_shopify_export": {
-        "description": "从 Shopify 后台导出商品数据",
-        "inputs": ["shop_url"],
-        "workflow": "shopify_export_products",
-    },
-    "cua_competitor_scrape": {
-        "description": "抓取竞品网站商品信息",
-        "inputs": ["competitor_url"],
-        "workflow": "competitor_product_scrape",
-    },
-    "cua_logistics_order": {
-        "description": "在物流商后台创建发货单",
-        "inputs": ["tracking_number", "recipient", "address"],
-        "workflow": "logistics_create_shipment",
-    },
-}
+Web CUA 作为 optima-agent 的一个新 Skill 接入，与现有 13 个 Skill 并列。optima-agent 根据用户意图自动选择调用哪个 Skill。
+
+```
+optima-agent Skills 架构:
+┌────────────────────────────────────────────────┐
+│  optima-agent (Claude Agent SDK)               │
+│                                                │
+│  已有 Skills:                                  │
+│    commerce-cli  (16 模块, 111+ 命令)          │
+│    comfy-cli     (ComfyUI 图片生成)            │
+│    scout-cli     (竞品分析)                    │
+│    bi-cli        (数据分析)                    │
+│    google-ads-cli (广告投放)                   │
+│    ...                                         │
+│                                                │
+│  新增 Skill:                                   │
+│    web-cua-cli   (Web CUA 自动化)              │
+│      ├── cua execute <task>                    │
+│      ├── cua workflow list                     │
+│      ├── cua workflow replay <id> --inputs {}  │
+│      └── cua login export <platform>           │
+└────────────────────────────────────────────────┘
 ```
 
-OptimaChat 调度时，对有 API 的服务调 MCP 工具，对无 API 的服务调 CUA 工具。CUA 工具内部自动走 workflow 重放或 full agent。
+```python
+# web-cua-cli 命令示例
+# cua execute --task "从 Shopify 后台导出商品" --shop-url https://mystore.myshopify.com
+# cua workflow replay shopify_export --inputs '{"shop_url": "..."}'
+# cua workflow list
+```
+
+optima-agent 调度时，对有 CLI 命令的服务直接调 CLI（如 `commerce-cli product list`），对无 API 的第三方服务调 `web-cua-cli`。CUA CLI 内部自动走 workflow 重放或 full agent。
 
 ## 7. 开发计划
 
@@ -503,7 +513,7 @@ OptimaChat 调度时，对有 API 的服务调 MCP 工具，对无 API 的服务
 | **P0: POC** | browser-use 跑通一个 Shopify 商品导出任务 | 3 天 | 能手动触发 agent 完成任务 |
 | **P1: 编译** | workflow-use 集成，跑通录制→编译→重放 | 1 周 | 第二次执行无 LLM 重放成功 |
 | **P2: API** | FastAPI 封装 + Task Router | 1 周 | HTTP 接口可调用 |
-| **P3: 集成** | 接入 Optima MCP 工具层 | 1 周 | OptimaChat 可调度 CUA 任务 |
+| **P3: 集成** | 封装为 web-cua-cli，接入 optima-agent Skill 层 | 1 周 | optima-agent 可调度 CUA 任务 |
 | **P4: 扩展** | 添加更多任务（竞品分析、物流等） | 持续 | 按业务需求逐步增加 |
 
 ## 8. 成本估算
